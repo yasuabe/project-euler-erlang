@@ -4,8 +4,9 @@
 
 solve(N, [Prime|_]) when Prime * Prime >= N -> N;
 solve(N, [Prime|PrimeLT]) ->
+  io:format("~p ~p~n", [N, Prime]),
   case N rem Prime of
-    0 -> solve(N div Prime, PrimeLT());
+    0 -> solve(N div Prime, [Prime|PrimeLT]);
     _ -> solve(N,           PrimeLT())
   end.
 
