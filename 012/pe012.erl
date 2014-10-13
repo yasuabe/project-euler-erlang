@@ -1,39 +1,37 @@
 -module(pe012).
--import(primes, [primes/0]).
+-import(prime_cache, [init_cache/0, next_prime/1]).
 -export([main/0]).
 -compile(export_all).
 
-prime_factors(N) -> prime_factors(N, primes()).
+prime_factors(N) -> prime_factors(N, 2).
 
 prime_factors(1, _) -> [];
-prime_factors(N, [PH|PT]) ->
+prime_factors(N, Prime) ->
   Cashed = get(N),
   case Cashed of
-    undefined -> case N rem PH of
-        0 -> Calculated = [PH|prime_factors(N div PH, [PH|PT])],
+    undefined ->
+      case N rem Prime of
+        0 -> Calculated = [Prime|prime_factors(N div Prime, Prime)],
              put(N, Calculated),
              Calculated;
-        _ -> prime_factors(N, PT())
+        _ -> prime_factors(N, next_prime(Prime))
       end;
-    _         -> 
-      Cashed
+    _         -> Cashed
   end.
 
-count([FH|FT]) -> count([FH|FT], undefined, 1, 1). 
-count([], _, Cnt, Prod) -> Cnt * Prod;
-count([Cur|T], Cur, Cnt, Prod) -> count(T, Cur, Cnt + 1, Prod);
-count([Cur|T], _,   Cnt, Prod) -> count(T, Cur, 2, Cnt * Prod).
+divisors([FH|FT]) -> divisors([FH|FT], undefined, 1, 1). 
+
+divisors([],      _,   Cnt, Prod) -> Cnt * Prod;
+divisors([Cur|T], Cur, Cnt, Prod) -> divisors(T, Cur, Cnt + 1, Prod);
+divisors([Cur|T], _,   Cnt, Prod) -> divisors(T, Cur, 2, Cnt * Prod).
 
 solve(Nth, Tri) ->
-  PF = prime_factors(Tri),
-  case count(PF) > 500 of
+  case divisors(prime_factors(Tri)) > 500 of
     true -> Tri;
     _    -> Next = Nth + 1, solve(Next, Tri + Next)
   end.
 
-main() -> erase(), solve(2, 3).
+main() -> erase(), init_cache(), solve(2, 3).
 
-% 13> c("012/pe012.erl").
-% 15> timer:tc(pe012, main, []).
-% {75553462,76576500}
-
+% 69> timer:tc(pe012, main, []).  
+% {295776,76576500}
