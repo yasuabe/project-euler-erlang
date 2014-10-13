@@ -1,24 +1,39 @@
 -module(pe012).
 -import(primes, [primes/0]).
 -export([main/0]).
+-compile(export_all).
 
-count_divisors(N) -> count_divisors(N, primes(), 1, 1).
+prime_factors(N) -> prime_factors(N, primes()).
 
-count_divisors(1, _, C, P) -> C*P;
-count_divisors(N, [PH|PT], C, P) when N rem PH == 0 ->
-  count_divisors(N div PH, [PH|PT], C + 1, P); 
-count_divisors(N, [_|PT], C, P) ->
-  count_divisors(N, PT(), 1, C*P). 
+prime_factors(1, _) -> [];
+prime_factors(N, [PH|PT]) ->
+  Cashed = get(N),
+  case Cashed of
+    undefined -> case N rem PH of
+        0 -> Calculated = [PH|prime_factors(N div PH, [PH|PT])],
+             put(N, Calculated),
+             Calculated;
+        _ -> prime_factors(N, PT())
+      end;
+    _         -> 
+      Cashed
+  end.
+
+count([FH|FT]) -> count([FH|FT], undefined, 1, 1). 
+count([], _, Cnt, Prod) -> Cnt * Prod;
+count([Cur|T], Cur, Cnt, Prod) -> count(T, Cur, Cnt + 1, Prod);
+count([Cur|T], _,   Cnt, Prod) -> count(T, Cur, 2, Cnt * Prod).
 
 solve(Nth, Tri) ->
-  case count_divisors(Tri) > 500 of
+  PF = prime_factors(Tri),
+  case count(PF) > 500 of
     true -> Tri;
     _    -> Next = Nth + 1, solve(Next, Tri + Next)
   end.
 
-main() -> solve(1, 1).
+main() -> erase(), solve(2, 3).
 
 % 13> c("012/pe012.erl").
 % 15> timer:tc(pe012, main, []).
-% {161857072,76576500}
+% {75553462,76576500}
 
