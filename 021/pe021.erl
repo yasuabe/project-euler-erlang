@@ -21,9 +21,8 @@ prepare_Ds([P|Ps]) ->
   prepare_Ds(Ps()).
 
 accumulate([],         Result) -> Result;
-accumulate([{N, D}|T], Result) when D  == N -> accumulate(T, Result);
 accumulate([{N, D}|T], Result) -> 
-  accumulate(T, Result + case get(D) of N -> N; _-> 0 end).
+  accumulate(T, Result + ?COND((D /= N) and (get(D) == N), N, 0)).
 
 main() ->
   erase(),
